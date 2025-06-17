@@ -1,6 +1,7 @@
 name: ECR Docker Build and Push
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
   pull_request:
