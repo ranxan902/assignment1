@@ -1,0 +1,37 @@
+name: ECR Docker Build and Push
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  docker-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone Repository
+        uses: actions/checkout@v3
+
+      - name: Set AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Authenticate with Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and Push Web Application Container
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/webapp:latest .
+          docker push ${{ steps.login-ecr.outputs.registry }}/webapp:latest
+
+      - name: Build and Push MySQL Container
+        run: |
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/mysql:latest -f Dockerfile_mysql .
+          docker push ${{ steps.login-ecr.outputs.registry }}/mysql:latest
